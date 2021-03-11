@@ -14,6 +14,10 @@ I like data, big data, small data, open data... you get the point. I usually wri
 
 Also, python > R.
 
+### About this blog
+
+This is a Jekyll based blog hosted on github. In particular, this blog is built using [Jekyll Now](https://github.com/barryclark/jekyll-now/). (Thanks *barryclark*!) Tweaks and design are my own.
+
 ### Data + Catastrophe = Datastrophe
 
 Catastrophe = an event causing great and usually sudden damage or suffering; a disaster.
