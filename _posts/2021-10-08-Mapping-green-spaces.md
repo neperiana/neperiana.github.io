@@ -46,7 +46,6 @@ For this analysis, we have downloaded data from:
 * [Population data at postal sector level can be extracted from Nomis](https://www.nomisweb.co.uk/census/2011/ks101ew)
 
 
-
 ### Geopandas for data manipulation
 GeoPandas is a python library that enables geospatial data manipulation. It introduces the `geoSeries`, a subclass of `pandas.Series`, handles the geometries  (points, polygons etc.). The `geoDataFrame` extends the popular concept of a `pandas.DataFrame` by adding a `geometry` column, which specifies the geometry of each row in a `geoSeries`. The beauty of this class hierarchy is that you can store as much metadata in your `geoDataFrame` as you would in aregular `DataFrame` and you can keep using Pandas functionalities for data manipulation for free. 
 
@@ -74,6 +73,7 @@ There are three main types:
 * A **polygon**, an ordered sequence of point tuples that form a closed polygon. It can also specify an optional unordered sequence of ring-like sequences specifying the interior boundaries or “holes” of the feature. `Polygon([(0, 0), (1, 1), (1, 0)])`
 
 `geoSeries` also store information about the projection used to generate the coordinates (`geoSeries.crs`). A single `geoDataFrame` can contain  multiple `geoSeries` with different CRS, which means you can store multiple projections of the same geospatial objects, although only one geomtry will be considered as the *active* geometry for a specific `geoDataFrame`. 
+
 
 But, how does one use GeoPandas then? Well, I am glad you asked.
 
@@ -121,22 +121,142 @@ And lastly, for particular tasks you may need to change the projection that your
 gmcr_boroughs.to_crs(epsg=3857, inplace=True)
 ```
 
-### Mapping with matplotlib
-`GeoPandas` can also plot maps with the aid of the `geoDataFrame.plot()` method which calls the `matplotlib` library.
+### Green public areas in Greater Manchester
+So far so good, but we need to upload geospatial data for green public areas within Greater Manchester. In our case, we know that Grater Manchester spreads across OrdenanceSurvey *SD* and *SJ* quadrants, so we need to read both files and concatenate the resulting geoDataFrames.
 
 ```python
-gmcr_boroughs.plot()
+fp = 'data/greenspace_SD/SD_GreenspaceSite.shp'
+gs_sd = gpd.read_file(fp)
+
+fp = 'data/greenspace_SJ/SJ_GreenspaceSite.shp'
+gs_sj = gpd.read_file(fp)
+
+gs = gpd.GeoDataFrame(
+    pd.concat([gs_sd, gs_sj], ignore_index=True)
+)
+```
+
+We are only interested in certain types of green spaces, so we will filter down our geoDataFrame. 
+
+```python
+function_types = [
+    'Play Space',
+    'Playing Field',
+    'Public Park Or Garden',
+    'Bowling Green',
+    'Allotments Or Community Growing Spaces',
+]
+gs = gs[gs['function'].isin(function_types)]
+```
+
+Still, `gs` will contain all polygons for quadrants *SD* and *SJ*. We can use `geoPandas.overlay()` function to intersect `gs` and `gmcr_boroughs` frames.
+
+```python3
+# Filtering down to green spaces in greater manchester
+gmcr_gs = gpd.overlay(gmcr_boroughs, gs, how='intersection')
+```
+
+### Mapping with matplotlib
+Now we can finally plot these green spaces. `GeoPandas` can also plot maps with the aid of the `geoDataFrame.plot()` method which calls the `matplotlib` library.
+
+```python
+gmcr_gs.plot()
 ```
 
 <center>
     <figure>
         <img src='./../images/001_gmcr_green_areas/simple_plot.png'>
-        <figcaption><i>Output of `gmcr_boroughs.plot()`.</i></figcaption>
+        <figcaption><i>Output of `gmcr_gs.plot()`.</i></figcaption>
+    </figure>
+</center>
+
+The first time I manage to plot a geospatial data, I was really excited. But quickly you realise that as maps go, this simple rendering of our `geoDataFrame` lacks the feel of a map. Let's work on that.
+
+Let's start by defining the bounding box for the map. We can use `shapely.ops.cascade_union` function to union polygons that define Greater Manchester into one big polygon. Then we can use the `geoSeries.bounds` property to extract the minimum and maximum coordinates for the polygon.
+
+```python
+from shapely.ops import cascaded_union
+
+# Define Greater Manchester polygon
+greater_manchester = gpd.GeoSeries(cascaded_union(gmcr_boroughs.geometry))
+
+# Define bounding box
+bounds = greater_manchester.bounds
+bounding_box = [
+    bounds['minx'][0],
+    bounds['maxx'][0],
+    bounds['miny'][0],
+    bounds['maxy'][0],
+]
+
+# Set bounds
+ax.set_xlim(bounding_box[0]-1000, bounding_box[1] + 1000)
+ax.set_ylim(bounding_box[2]-1000, bounding_box[3] + 1000)
+```
+
+We then can go on and plot both the local authority boundaries (almost transparent, with `alpha=0.3`) and the green area polygons (as green shapes).
+
+```python
+# Plot borough borders
+gmcr_boroughs.plot(
+    ax=ax, 
+    alpha=0.3, 
+    edgecolor='black', 
+    facecolor='silver',
+)
+
+# Plot green areas
+gmcr_gs.plot(
+    ax=ax, 
+    alpha = 0.9, 
+    color='mediumseagreen',
+    label='Green Open Spaces',
+)
+```
+
+We can use `contextily` to add a backgrund map, which enhances the geographic contextualisation.
+
+```python
+import contextily as cx # map backgrounds
+
+# Add background
+cx.add_basemap(ax, source=cx.providers.Stamen.TonerLite)
+```
+
+Let's also remove ticks from axes, as they no longer carry relevant meaning.
+
+```python
+# Remove axis 
+ax.set_yticklabels([])
+ax.set_xticklabels([])
+```
+
+Last but not least, I want to add a legend. As the map layers we have added don't provide legend handles, we will create them from scratch with the following few lines.
+
+```python
+# Legend
+import matplotlib.patches as mpatches
+green_patch = mpatches.Patch(color='mediumseagreen', alpha=0.9, label='Green public spaces')
+gray_patch = mpatches.Patch(facecolor='silver', edgecolor='black', alpha=0.3, label='Local Authorities')
+leg = plt.legend(
+    handles=[green_patch, gray_patch],
+    bbox_to_anchor=(1.05, 1),
+    loc=2,
+    borderaxespad=0.,
+    frameon=False,
+    prop={'size': 12},
+```
+
+Putting it all together, we get this beauty of a map.
+
+<center>
+    <figure>
+        <img src='./../images/001_gmcr_green_areas/gmcr_green_areas.png'>
     </figure>
 </center>
 
 ### Running spatial calculations
-tbc
+Fantastic. But, what if we want to run more complex calculations. For example, what if we want to quantify the access to green public space based on population and break this down to a granular geographic breakdown, like postal sector?
 
 ### To wrap-up
 tbd
