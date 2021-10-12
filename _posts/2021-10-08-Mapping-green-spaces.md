@@ -20,7 +20,7 @@ There are a few main concepts that is perhaps best to tackle first:
 
 <center>
     <figure>
-        <img src='./../images/001_gmcr_green_areas/coordinate_vs_projection.png' figcaption='hola'>
+        <img src='./../images/001_gmcr_green_areas/coordinate_vs_projection.png'>
         <figcaption><i>Difference between GCS and PCS.</i></figcaption>
     </figure>
 </center>
@@ -48,7 +48,34 @@ For this analysis, we have downloaded data from:
 
 
 ### Geopandas for data manipulation
-tbd
+GeoPandas is a python library that enables geospatial data manipulation. It introduces the `geoSeries`, a subclass of `pandas.Series`, handles the geometries  (points, polygons etc.). The `geoDataFrame` extends the popular concept of a `pandas.DataFrame` by adding a `geometry` column, which specifies the geometry of each row in a `geoSeries`. The beauty of this class hierarchy is that you can store as much metadata in your `geoDataFrame` as you would in aregular `DataFrame` and you can keep using Pandas functionalities for data manipulation for free. 
+
+<center>
+    <figure>
+        <img src='./../images/001_gmcr_green_areas/dataframe.svg' height='300px'>
+        <figcaption><i>GeoDataFrame diagram.</i></figcaption>
+    </figure>
+</center>
+
+`geoSeries` make use of [shapely geometry objects](https://shapely.readthedocs.io/en/stable/manual.html#geometric-objects) to specify their spatial boundaries. 
+
+<center>
+    <figure>
+        <img src='./../images/001_gmcr_green_areas/linestring.png'>
+        <img src='./../images/001_gmcr_green_areas/polygon.png'>
+        <figcaption><i>Shapely line and polygon.</i></figcaption>
+    </figure>
+</center>
+
+There are three main types: 
+
+* A point, coordinate values or point tuple parameters. `Point(0.0, 0.0)`
+* A line, an ordered sequence of 2 or more point tuples. `LineString([(0, 0), (1, 1)])`
+* A polygon, an ordered sequence of point tuples that form a close polygon. It can also specify an optional unordered sequence of ring-like sequences specifying the interior boundaries or “holes” of the feature. `Polygon([(0, 0), (1, 1), (1, 0)])`
+
+Each GeoSeries can contain any geometry type (you can even mix them within a single array) and has a GeoSeries.crs attribute, which stores information about the projection (CRS stands for Coordinate Reference System). Therefore, each GeoSeries in a GeoDataFrame can be in a different projection, allowing you to have, for example, multiple versions (different projections) of the same geometry.
+
+Only one GeoSeries in a GeoDataFrame is considered the active geometry, which means that all geometric operations applied to a GeoDataFrame operate on this active column.
 
 ```python
 fp = 'data/boundary_lines/district_borough_unitary_region.shp'
