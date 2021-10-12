@@ -256,7 +256,116 @@ Putting it all together, we get this beauty of a map.
 </center>
 
 ### Running spatial calculations
-Fantastic. But, what if we want to run more complex calculations. For example, what if we want to quantify the access to green public space based on population and break this down to a granular geographic breakdown, like postal sector?
+Fantastic. But, what if we want to run more complex calculations. For example, what if we want to quantify the access to green public space based on population and break this down to a granular geographic breakdown, like postal sector? GeoPandas is here to help.
+
+First, we need to read postal sector (the area corresponsing to addresses that map to the same postal code without the last couple of letters, for example all addresses starting with *N3 5*) shapes and reduce the frame to those of Greater Manchester. Let's use `geoPandas.readfile()` and `geoPandas.overlay()` for this task. 
+
+```python
+# UK Postal Sector boundaries
+fp = 'data/GB_Postcodes/PostalSector.shp'
+ps = gpd.read_file(fp)
+ps.to_crs(epsg=3857, inplace=True)
+
+# Filter by postal sectors in greater manchester
+gmcr_ps = gpd.overlay(gmcr_boroughs, ps, how='intersection')
+```
+
+We now need to quantify the area that each postal sector has access to. We want to calculate the amount of green spaces within a 10 minutes walk form each postal district. Why 10 minutes? As the people from [Fields in Trust brilliantly explain](https://www.fieldsintrust.org/news/the-ten-minute-walk-and-why-its-important), a ten-minute walking distance is a well-established measure of an acceptable distance for a resident to be from their nearest park or green space. To make things easier, I will use the equivalent distance of a 10 minutes walk, which is roughly equivalent to 800 meters ([Wikipedia: 10 min walk](https://en.wikipedia.org/wiki/10-Minute_Walk)).
+
+Firstly, let's copy our GeoDataFrame, as we will need the actual postal sector boundaries as they are later on. Let's use `shapely.buffer()` to expand out our geometry boundaries 800 meters.
+
+```python
+gmcr_expanded_ps = gmcr_ps.copy()
+gmcr_expanded_ps['geometry'] = gmcr_expanded_ps['geometry'].apply(lambda geo: geo.buffer(800))
+```
+
+`shapely` calculates distance in a Euclidean manner, using the good old Pythagoras’s theorem. This is not a big problem if our analysis uses a projection that preserves areas, unlike Mercator. I will use the Equal-Area Scalable Earth Grid (EASE-Grid), `epsg=6933`.
+
+```python
+gmcr_expanded_ps.to_crs(epsg=6933, inplace=True)
+mcr_gs_ease = gmcr_gs.copy()
+mcr_gs_ease.to_crs(epsg=6933, inplace=True)
+```
+
+Let's loop over each expanded postal sector and calculate the intersection of our expanded boundary with all green areas within Greater Manchester. We can use `shapely.intersection` method to obtain the intersection between two polygons. We can then access the area of the resulting polygon by accessing the public area property.
+
+```python
+gmcr_expanded_ps['green_area_sq_km'] = 0.0
+
+for i, postal_sectors in gmcr_expanded_ps.iterrows():
+    for j, green_space in enumerate(mcr_gs_ease['geometry']):
+        green_area_in_postal_sector = postal_sectors['geometry'].intersection(green_space)
+        gmcr_expanded_ps.at[i, 'green_area_sq_km'] += green_area_in_postal_sector.area / 10**6 # squared km
+
+gmcr_expanded_ps['green_area_ha'] = gmcr_expanded_ps['green_area_sq_km'] * 100
+gmcr_expanded_ps['green_area_sq_m'] = gmcr_expanded_ps['green_area_sq_km'] * 1000000
+```
+
+Excellent, let's merge these are calculations back to our original geoDataFrame.
+
+```python
+gmcr_ps = pd.merge(
+    gmcr_ps,
+    gmcr_expanded_ps,
+    how='left',
+    on='RMSect',
+)
+```
+
+Now let's add population data. Population data at postal sector level can be extracted from [Nomis](https://www.nomisweb.co.uk/census/2011/ks101ew). I have extracted postal sector population (usual residents) for the whole of the North West, so I will have to filter the file down. This data is based on the 2011 Census, which is now 10 years old. Not ideal, but it is the only source of open population data at such granular level. This data is contained in a CSV file, which has no geospatial reference other than the postal sector as a string. We need to transform this data a little bit.
+
+```python
+pop = pd.read_csv(
+    'data/2974730013.csv', 
+    skiprows=11, 
+    names=['area','population'],
+)
+# removing spaces from postal sector for an easier match
+pop['StrSect'] = pop['area'].str[7:].str.replace(' ','')
+pop.drop('area', axis=1, inplace=True)
+
+# converting population to numeric
+pop = pop[:-4]
+pop['population'] = pop['population'].apply(pd.to_numeric)
+```
+
+Left join to our `gmcr_ps` geoDataFrame and calculate the area/inhabitants ratio.
+
+```python
+gmcr_ps = pd.merge(
+    gmcr_ps,
+    pop,
+    how='left',
+    on='StrSect',
+)
+
+# calculate area/inhabitants ratio
+gmcr_ps['green_area_sq_m_pp'] = gmcr_ps['green_area_sq_m']/gmcr_ps['population']
+```
+
+And now let's plot these values. We can easily do that indicating which `column` we want to use from the dataFrame.
+
+```python
+# Plot green areas access
+vmin, vmax = 0, 1200
+gmcr_ps.plot(
+    ax=ax, 
+    column='green_area_sq_m_pp', 
+    cmap='hot_r', 
+    vmin=vmin, 
+    vmax=vmax, 
+    alpha=0.7,
+)
+```
+
+<center>
+    <figure>
+        <img src='./../images/001_gmcr_green_areas/gmcr_green_areas_choropleth.png'>
+    </figure>
+</center>
+
+Beautiful! This type of chart is called a choropleth, a type of map in which regions is colored or patterned in proportion to a variable that represents an aggregate summary of a geographic characteristic within the area. 
 
 ### To wrap-up
-tbd
+
+We have seen how python and geoPandas provide a great set of tools to perform GIS spatial analysis. Even underestimating its population because of using old census data, the centre of Greater Manchester comes up as severly underprovided for in terms of green public spaces.
