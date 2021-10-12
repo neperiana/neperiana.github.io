@@ -5,9 +5,12 @@ layout: default
 <div class="main-content">
   <article>
     <div class="date">
-      Written on {{ page.date | date: "%B %e, %Y" }}
+      <img height=20px src='../images/clock.png'> {{ page.date | date: "%B %e, %Y" }}
     </div>
-  
+    <div class="source">
+      <a href={{ page.source }}><img height=20px src='../images/source.png'> {{ page.source_type }} </a> 
+    </div>
+
     <div class="entry">
       {{ content }}
     </div>

@@ -18,15 +18,14 @@ headerimage: mosaic.jpg
 # Includes an icon in the footer for each username you enter
 footer-links:
   dribbble:
-  email: camila.varo[at]gmail.com
   facebook:
   flickr:
   github: neperiana
   instagram:
   linkedin: camila-varó-453a8452
   pinterest:
+  medium: neperiana
   rss: neperiana
-  twitter: neperiana
   stackoverflow: # your stackoverflow profile, e.g. "users/50476/bart-kiers"
   youtube: # channel/<your_long_string> or user/<user-name>
   googleplus: # anything in your profile username that comes after plus.google.com/
