@@ -9,12 +9,12 @@ image: 001_gmcr_green_areas.png
 source: https://github.com/neperiana/data-science-projects/blob/mapping-green-areas/mapping_urban_green_areas/mapping_mcr_green_spaces.ipynb
 ---
 
-The benefits of having public green areas around when living in a densily populated city are many, from encouraging exercise or providing spaces for socializing to decreasing noise and air pollution.
+The benefits of having public green areas around when living in a densely populated city are many, from encouraging exercise or providing spaces for socializing to decreasing noise and air pollution.
 
-I aim to map public green areas in Manchester and how they distribute according to it population. Fields in Trust have done an amazing job at mapping the whole of the UK and stablishing their [green-space-index](https://www.fieldsintrust.org/green-space-index), but I aim to have my own go at running an spatial analysis using python and geopandas.
+I aim to map public green areas in Manchester and how they distribute according to their population. Fields in Trust have done an amazing job at mapping the whole of the UK and establishing their [green-space index](https://www.fieldsintrust.org/green-space-index), but I aim to have my own go at running a spatial analysis using python and geoPandas.
 
 ### GIS and spatial analysis
-GIS stands for Geographic Information System and it is a spatial system that enables the creation, management, analysis and mapping of all types of data. GIS allows to understand information within their geographic context, being able to spot geographical patterns, which would be very defficult to spot without the aid of a map. This type of analysis is called spatial analysis, and it is commonly used across many industries to discover patterns, incidents and coordinate spatial resources.
+GIS stands for Geographic Information System and it is a spatial system that enables the creation, management, analysis and mapping of all types of data. GIS allows to understand information within their geographic context, being able to spot geographical patterns, which would be very difficult to spot without the aid of a map. This type of analysis is called spatial analysis, and it is commonly used across many industries to discover patterns, incidents and coordinate spatial resources.
 
 There are a few main concepts that is perhaps best to tackle first:
 
@@ -27,27 +27,27 @@ There are a few main concepts that is perhaps best to tackle first:
 
 * A **geographic coordinate system** (GCS) is a reference framework that defines the locations of features on a model of the earth. It’s shaped like a globe—spherical. Its units are angular, usually degrees.
 
-* A **projected coordinate system** (PCS) is flat. It contains a GCS, but it converts that GCS into a flat surface, by projecting points into the plane. Its units are linear, for example in meters. Note that not all projections conserve area, therefore two shapes with same area on the globe may appear to be different in size after having been projected.
+* A **projected coordinate system** (PCS) is flat. It contains a GCS, but it converts that GCS into a flat surface, by projecting points into the plane. Its units are linear, for example in meters. Note that not all projections conserve area, therefore two shapes with the same area on the globe may appear to be different in size after having been projected.
 
 ### Where to find geo open data
-For any piece of spatial analysis the first thing you need is geographic data, ideally open source (unless your company is paying for it!). Geospatial data can come in many shapes (pun intended) and forms. Geospatial data files contain geometric location and any other associated attribute information. There are many different formats, but most common ones are: 
+For any piece of spatial analysis, the first thing you need is geographic data, ideally open source (unless your company is paying for it!). Geospatial data can come in many shapes (pun intended) and forms. Geospatial data files contain geometric location and any other associated attribute information. There are many different formats, but the most common ones are: 
 
 * Esri **Shapefile** - the industry standard. A complete set of three files make up a shapefile: .shp is the feature geometry, .shx is the shape index positiona and .dbf is the attribute data.
 * Geographic JavaScript Object Notation (**GeoJSON**) - commonly used for web-based mapping. GeoJSON stores coordinates in JSON format. Extensions are .geojson and .json.
   
-Other resources may just provide a raw flat csv file with a reference to a geographical area, like a postcode. A combination of that flat file and a shape file may be needed in these cases.
+Other resources may just provide a raw flat csv file with a reference to a geographical area, like a postcode. A combination of that flat file and a geospatial file may be needed in these cases.
 
-Government institutions usually collate and share geographical information at different granularities. In the UK, the [Office for National Statistics](https://geoportal.statistics.gov.uk/) and [OrdenanceSurvey](https://www.ordnancesurvey.co.uk/business-government/tools-support/open-data-support) are your two main go-to places. In Manchester, [Mapping GM](https://mappinggm.org.uk/metadata/) is a great resource that collates geo spatial data from different sources. But remember, Google is always your friend.
+Government institutions usually collate and share geographical information at different granularities. In the UK, the [Office for National Statistics](https://geoportal.statistics.gov.uk/) and [OrdenanceSurvey](https://www.ordnancesurvey.co.uk/business-government/tools-support/open-data-support) are your two main go-to places. In Manchester, [Mapping GM](https://mappinggm.org.uk/metadata/) is a great resource that collates geospatial data from different sources. But remember, Google is always your friend.
 
 For this analysis, we have downloaded data from:
-* [Ordenance Survey's green space vector data](https://www.ordnancesurvey.co.uk/business-government/products/open-map-greenspace)
-* [Ordenance Survey's boundaries](https://osdatahub.os.uk/downloads/open/BoundaryLine)
+* [Ordnance Survey's green space vector data](https://www.ordnancesurvey.co.uk/business-government/products/open-map-greenspace)
+* [Ordnance Survey's boundaries](https://osdatahub.os.uk/downloads/open/BoundaryLine)
 * [Postal Sector shapes from Edinburgh Data Share](https://datashare.ed.ac.uk/handle/10283/2597)
 * [Population data at postal sector level can be extracted from Nomis](https://www.nomisweb.co.uk/census/2011/ks101ew)
 
 
 ### Geopandas for data manipulation
-GeoPandas is a python library that enables geospatial data manipulation. It introduces the `geoSeries`, a subclass of `pandas.Series`, handles the geometries  (points, polygons etc.). The `geoDataFrame` extends the popular concept of a `pandas.DataFrame` by adding a `geometry` column, which specifies the geometry of each row in a `geoSeries`. The beauty of this class hierarchy is that you can store as much metadata in your `geoDataFrame` as you would in aregular `DataFrame` and you can keep using Pandas functionalities for data manipulation for free. 
+GeoPandas is a python library that enables geospatial data manipulation. It introduces the `geoSeries`, a subclass of `pandas.Series`, which handles the geometries  (points, polygons etc.). The `geoDataFrame` extends the popular concept of a `pandas.DataFrame` by adding a `geometry` column, which specifies the geometry of each row in a `geoSeries`. The beauty of this class hierarchy is that you can store as much metadata in your `geoDataFrame` as you would in a regular `DataFrame` and you can keep using Pandas functionalities for data manipulation for free. 
 
 <center>
     <figure>
@@ -72,12 +72,11 @@ There are three main types:
 * A **line**, an ordered sequence of 2 or more point tuples. `LineString([(0, 0), (1, 1)])`
 * A **polygon**, an ordered sequence of point tuples that form a closed polygon. It can also specify an optional unordered sequence of ring-like sequences specifying the interior boundaries or “holes” of the feature. `Polygon([(0, 0), (1, 1), (1, 0)])`
 
-`geoSeries` also store information about the projection used to generate the coordinates (`geoSeries.crs`). A single `geoDataFrame` can contain  multiple `geoSeries` with different CRS, which means you can store multiple projections of the same geospatial objects, although only one geomtry will be considered as the *active* geometry for a specific `geoDataFrame`. 
-
+`geoSeries` also store information about the projection used to generate the coordinates (`geoSeries.crs`). A single `geoDataFrame` can contain  multiple `geoSeries` with different CRS, which means you can store multiple projections of the same geospatial objects, although only one geometry will be considered as the *active* geometry for a specific `geoDataFrame`. 
 
 But, how does one use GeoPandas then? Well, I am glad you asked.
 
-To start with, you need to read the geospatial file using `geoPandas.read_file()`, which automatically detects the filetype and returns a `geoDataFrame` object. 
+To start with, you need to read the geospatial file using `geoPandas.read_file()`, which automatically detects the file type and returns a `geoDataFrame` object. 
 
 ```python
 import geopandas as gpd
@@ -115,14 +114,14 @@ greater_manchester_districts = [
 gmcr_boroughs = df[df['NAME'].isin(greater_manchester_districts)]
 ```
 
-And lastly, for particular tasks you may need to change the projection that your data comes in. For example, we need to use `epsg=3857` (WGS 84 / Pseudo-Mercator) to be abel to plot on top of `contextly` open maps. Luckily, changing the projection used is really easy with the `geoDataFrame.to_crs()` method.
+And lastly, for particular tasks, you may need to change the projection that your data comes in. For example, we need to use `epsg=3857` (WGS 84 / Pseudo-Mercator) to be able to plot on top of `contextly` open maps. Luckily, changing the projection used is really easy with the `geoDataFrame.to_crs()` method.
 
 ```python
 gmcr_boroughs.to_crs(epsg=3857, inplace=True)
 ```
 
 ### Green public areas in Greater Manchester
-So far so good, but we need to upload geospatial data for green public areas within Greater Manchester. In our case, we know that Grater Manchester spreads across OrdenanceSurvey *SD* and *SJ* quadrants, so we need to read both files and concatenate the resulting geoDataFrames.
+So far so good, but we need to upload geospatial data for green public areas within Greater Manchester. In our case, we know that Grater Manchester spreads across OrdnanceSurvey *SD* and *SJ* quadrants, so we need to read both files and concatenate the resulting geoDataFrames.
 
 ```python
 fp = 'data/greenspace_SD/SD_GreenspaceSite.shp'
@@ -170,7 +169,7 @@ gmcr_gs.plot()
     </figure>
 </center>
 
-The first time I manage to plot a geospatial data, I was really excited. But quickly you realise that as maps go, this simple rendering of our `geoDataFrame` lacks the feel of a map. Let's work on that.
+The first time I manage to plot geospatial data, I was really excited. But quickly you realise that as maps go, this simple rendering of our `geoDataFrame` lacks the feel of a map. Let's work on that.
 
 Let's start by defining the bounding box for the map. We can use `shapely.ops.cascade_union` function to union polygons that define Greater Manchester into one big polygon. Then we can use the `geoSeries.bounds` property to extract the minimum and maximum coordinates for the polygon.
 
@@ -214,7 +213,7 @@ gmcr_gs.plot(
 )
 ```
 
-We can use `contextily` to add a backgrund map, which enhances the geographic contextualisation.
+We can use `contextily` to add a background map, which enhances the geographic contextualisation.
 
 ```python
 import contextily as cx # map backgrounds
@@ -258,7 +257,7 @@ Putting it all together, we get this beauty of a map.
 ### Running spatial calculations
 Fantastic. But, what if we want to run more complex calculations. For example, what if we want to quantify the access to green public space based on population and break this down to a granular geographic breakdown, like postal sector? GeoPandas is here to help.
 
-First, we need to read postal sector (the area corresponsing to addresses that map to the same postal code without the last couple of letters, for example all addresses starting with *N3 5*) shapes and reduce the frame to those of Greater Manchester. Let's use `geoPandas.readfile()` and `geoPandas.overlay()` for this task. 
+First, we need to read postal sector (the area corresponding to addresses that map to the same postal code without the last couple of letters, for example, all addresses starting with *N3 5*) shapes and reduce the frame to those of Greater Manchester. Let's use `geoPandas.readfile()` and `geoPandas.overlay()` for this task. 
 
 ```python
 # UK Postal Sector boundaries
@@ -270,7 +269,7 @@ ps.to_crs(epsg=3857, inplace=True)
 gmcr_ps = gpd.overlay(gmcr_boroughs, ps, how='intersection')
 ```
 
-We now need to quantify the area that each postal sector has access to. We want to calculate the amount of green spaces within a 10 minutes walk form each postal district. Why 10 minutes? As the people from [Fields in Trust brilliantly explain](https://www.fieldsintrust.org/news/the-ten-minute-walk-and-why-its-important), a ten-minute walking distance is a well-established measure of an acceptable distance for a resident to be from their nearest park or green space. To make things easier, I will use the equivalent distance of a 10 minutes walk, which is roughly equivalent to 800 meters ([Wikipedia: 10 min walk](https://en.wikipedia.org/wiki/10-Minute_Walk)).
+We now need to quantify the area that each postal sector has access to. We want to calculate the amount of green spaces within a 10-minute walk from each postal district. Why 10 minutes? As the people from [Fields in Trust brilliantly explain](https://www.fieldsintrust.org/news/the-ten-minute-walk-and-why-its-important), a ten-minute walking distance is a well-established measure of an acceptable distance for a resident to be from their nearest park or green space. To make things easier, I will use the equivalent distance of a 10 minutes walk, which is roughly equivalent to 800 meters ([Wikipedia: 10 min walk](https://en.wikipedia.org/wiki/10-Minute_Walk)).
 
 Firstly, let's copy our GeoDataFrame, as we will need the actual postal sector boundaries as they are later on. Let's use `shapely.buffer()` to expand out our geometry boundaries 800 meters.
 
@@ -279,7 +278,7 @@ gmcr_expanded_ps = gmcr_ps.copy()
 gmcr_expanded_ps['geometry'] = gmcr_expanded_ps['geometry'].apply(lambda geo: geo.buffer(800))
 ```
 
-`shapely` calculates distance in a Euclidean manner, using the good old Pythagoras’s theorem. This is not a big problem if our analysis uses a projection that preserves areas, unlike Mercator. I will use the Equal-Area Scalable Earth Grid (EASE-Grid), `epsg=6933`.
+`shapely` calculates the distance in a Euclidean manner, using the good old Pythagoras’s theorem. This is not a big problem if our analysis uses a projection that preserves areas, unlike Mercator. I will use the Equal-Area Scalable Earth Grid (EASE-Grid), `epsg=6933`.
 
 ```python
 gmcr_expanded_ps.to_crs(epsg=6933, inplace=True)
@@ -312,7 +311,7 @@ gmcr_ps = pd.merge(
 )
 ```
 
-Now let's add population data. Population data at postal sector level can be extracted from [Nomis](https://www.nomisweb.co.uk/census/2011/ks101ew). I have extracted postal sector population (usual residents) for the whole of the North West, so I will have to filter the file down. This data is based on the 2011 Census, which is now 10 years old. Not ideal, but it is the only source of open population data at such granular level. This data is contained in a CSV file, which has no geospatial reference other than the postal sector as a string. We need to transform this data a little bit.
+Now let's add population data. Population data at postal sector level can be extracted from [Nomis](https://www.nomisweb.co.uk/census/2011/ks101ew). I have extracted postal sector population (usual residents) for the whole of the North West, so I will have to filter the file down. This data is based on the 2011 Census, which is now 10 years old. Not ideal, but it is the only source of open population data at such a granular level. This data is contained in a CSV file, which has no geospatial reference other than the postal sector as a string. We need to transform this data a little bit.
 
 ```python
 pop = pd.read_csv(
@@ -343,7 +342,7 @@ gmcr_ps = pd.merge(
 gmcr_ps['green_area_sq_m_pp'] = gmcr_ps['green_area_sq_m']/gmcr_ps['population']
 ```
 
-And now let's plot these values. We can easily do that indicating which `column` we want to use from the dataFrame.
+And now let's plot these values. We can easily do that by indicating which `column` we want to use from the dataFrame.
 
 ```python
 # Plot green areas access
@@ -364,8 +363,8 @@ gmcr_ps.plot(
     </figure>
 </center>
 
-Beautiful! This type of chart is called a choropleth, a type of map in which regions is colored or patterned in proportion to a variable that represents an aggregate summary of a geographic characteristic within the area. 
+Beautiful! This type of chart is called a choropleth, a type of map in which regions is coloured or patterned in proportion to a variable that represents an aggregate summary of a geographic characteristic within the area. 
 
 ### To wrap-up
 
-We have seen how python and geoPandas provide a great set of tools to perform GIS spatial analysis. Even underestimating its population because of using old census data, the centre of Greater Manchester comes up as severly underprovided for in terms of green public spaces.
+We have seen how python and geoPandas provide a great set of tools to perform GIS spatial analysis. Even underestimating its population because of using old census data, the centre of Greater Manchester comes up as severely underprovided for in terms of green public spaces.
