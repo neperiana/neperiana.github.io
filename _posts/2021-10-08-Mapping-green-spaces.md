@@ -27,7 +27,7 @@ There are a few main concepts that is perhaps best to tackle first:
 
 * A **geographic coordinate system** (GCS) is a reference framework that defines the locations of features on a model of the earth. It’s shaped like a globe—spherical. Its units are angular, usually degrees.
 
-* A **projected coordinate system** (PCS) is flat. It contains a GCS, but it converts that GCS into a flat surface, by projecting points into the plane. Its units are linear, for example in meters. Note that not all projections conserve area, therefore two shapes with same area.
+* A **projected coordinate system** (PCS) is flat. It contains a GCS, but it converts that GCS into a flat surface, by projecting points into the plane. Its units are linear, for example in meters. Note that not all projections conserve area, therefore two shapes with same area on the globe may appear to be different in size after having been projected.
 
 ### Where to find geo open data
 For any piece of spatial analysis the first thing you need is geographic data, ideally open source (unless your company is paying for it!). Geospatial data can come in many shapes (pun intended) and forms. Geospatial data files contain geometric location and any other associated attribute information. There are many different formats, but most common ones are: 
@@ -69,21 +69,71 @@ GeoPandas is a python library that enables geospatial data manipulation. It intr
 
 There are three main types: 
 
-* A point, coordinate values or point tuple parameters. `Point(0.0, 0.0)`
-* A line, an ordered sequence of 2 or more point tuples. `LineString([(0, 0), (1, 1)])`
-* A polygon, an ordered sequence of point tuples that form a close polygon. It can also specify an optional unordered sequence of ring-like sequences specifying the interior boundaries or “holes” of the feature. `Polygon([(0, 0), (1, 1), (1, 0)])`
+* A **point**, coordinate values or point tuple parameters. `Point(0.0, 0.0)`
+* A **line**, an ordered sequence of 2 or more point tuples. `LineString([(0, 0), (1, 1)])`
+* A **polygon**, an ordered sequence of point tuples that form a closed polygon. It can also specify an optional unordered sequence of ring-like sequences specifying the interior boundaries or “holes” of the feature. `Polygon([(0, 0), (1, 1), (1, 0)])`
 
-Each GeoSeries can contain any geometry type (you can even mix them within a single array) and has a GeoSeries.crs attribute, which stores information about the projection (CRS stands for Coordinate Reference System). Therefore, each GeoSeries in a GeoDataFrame can be in a different projection, allowing you to have, for example, multiple versions (different projections) of the same geometry.
+`geoSeries` also store information about the projection used to generate the coordinates (`geoSeries.crs`). A single `geoDataFrame` can contain  multiple `geoSeries` with different CRS, which means you can store multiple projections of the same geospatial objects, although only one geomtry will be considered as the *active* geometry for a specific `geoDataFrame`. 
 
-Only one GeoSeries in a GeoDataFrame is considered the active geometry, which means that all geometric operations applied to a GeoDataFrame operate on this active column.
+But, how does one use GeoPandas then? Well, I am glad you asked.
+
+To start with, you need to read the geospatial file using `geoPandas.read_file()`, which automatically detects the filetype and returns a `geoDataFrame` object. 
 
 ```python
+import geopandas as gpd
+
 fp = 'data/boundary_lines/district_borough_unitary_region.shp'
 df = gpd.read_file(fp)
 ```
 
+GeoPandas reading functionality is powered by the great `fiona` library, which in turn makes use of a massive open-source program called GDAL/OGR designed to facilitate spatial data transformations.
+
+<center>
+    <figure>
+        <img src='./../images/001_gmcr_green_areas/geoDataFrame.png'>
+        <figcaption><i>GeoDataFrame sneak-peek.</i></figcaption>
+    </figure>
+</center>
+
+As our boundaries file contains boundary polygons for all districts in the UK, we need to filter down to only those of Greater Manchester. We can use regular Pandas functionality to do this:
+
+```python
+greater_manchester_districts = [
+    'Manchester District (B)',
+    'Bury District (B)',
+    'Oldham District (B)',
+    'Rochdale District (B)',
+    'Salford District (B)',
+    'Trafford District (B)',
+    'Stockport District (B)',
+    'Tameside District (B)',
+    'Bolton District (B)',
+    'Wigan District (B)',
+]
+
+# Filtering to Greater Manchester
+gmcr_boroughs = df[df['NAME'].isin(greater_manchester_districts)]
+```
+
+And lastly, for particular tasks you may need to change the projection that your data comes in. For example, we need to use `epsg=3857` (WGS 84 / Pseudo-Mercator) to be abel to plot on top of `contextly` open maps. Luckily, changing the projection used is really easy with the `geoDataFrame.to_crs()` method.
+
+```python
+gmcr_boroughs.to_crs(epsg=3857, inplace=True)
+```
+
 ### Mapping with matplotlib
-tbc
+`GeoPandas` can also plot maps with the aid of the `geoDataFrame.plot()` method which calls the `matplotlib` library.
+
+```python
+gmcr_boroughs.plot()
+```
+
+<center>
+    <figure>
+        <img src='./../images/001_gmcr_green_areas/simple_plot.png'>
+        <figcaption><i>Output of `gmcr_boroughs.plot()`.</i></figcaption>
+    </figure>
+</center>
 
 ### Running spatial calculations
 tbc
