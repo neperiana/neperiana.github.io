@@ -32,7 +32,14 @@ layout: default
     <div class="entry">
       {{ content }}
     </div>
-  
+    {% if page.attributions %} 
+      <div>
+        &copy; Thanks to:
+        {% for attribution in page.attributions %}
+        <br> - <a href="{{ attribution.url }}">{{ attribution.author }}</a> for {{ attribution.what }}
+        {% endfor %}
+      </div>
+    {% endif %}
     {% include disqus.html %}
   </article>
 </div>
