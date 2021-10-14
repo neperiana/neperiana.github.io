@@ -27,3 +27,7 @@ Data is just a tool that can be used for good or bad. The name of this blog forc
 ### Reach out
 
 If you have any comments or thoughts, please, do contact me. You can find my email and other social media profiles in the footer.
+
+### Attribution
+
+Icons from [flaticon](https://www.flaticon.com/).

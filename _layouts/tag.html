@@ -1,0 +1,34 @@
+---
+layout: default
+---
+
+<div class="blog-grid-container">
+  {% assign lowerPageTitle = page.title | downcase %}
+  {% for post in site.posts %}
+    {% for tag in post.tags %}
+        {% if tag == lowerPageTitle %}   
+            <div class="post-card">
+                <div class="card-image-container">
+                    <a href="{{ site.baseurl }}{{ post.url }}">
+                        {% if post.image %}
+                            <img class="card-image" src="{{ site.baseurl }}/images/{{ post.image }}" alt="{{ post.title }}">
+                        {% else %}
+                            <img class="card-image" src="{{ site.baseurl }}/images/default-post-image.jpg" alt="{{ post.title }}"> 
+                        {% endif %}
+                    </a>
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title">
+                        <a class="text-dark" href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a>
+                    </h2>
+                    <h4 class="card-subtitle">
+                        {{ post.subtitle }}
+                    </h4>
+                    <span class="post-date">{{ post.date | date_to_string }}</span>
+                    <h4 class="card-text">{{ post.excerpt | strip_html | truncatewords:30 }}</h4>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+  {% endfor %}
+</div>

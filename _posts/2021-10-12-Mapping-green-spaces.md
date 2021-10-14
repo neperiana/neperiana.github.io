@@ -3,7 +3,6 @@ layout: post
 title:  "Mapping public green spaces in Manchester"
 subtitle: "Using python and geopandas to analyse access to green space"
 author: camila
-categories: [ spatial analysis ]
 tags: [ python, geopandas, matplotlib, spatial analysis, open data ]
 image: 001_gmcr_green_areas.png
 source_type: Jupyter Notebook 

@@ -83,3 +83,18 @@ exclude:
   - LICENSE
   - README.md
   - CNAME
+
+# Add tag categories
+collections:
+  tags:
+    title: Tags
+    output: true
+
+defaults:
+- scope:
+    path: ''
+    type: tags
+  values:
+    permalink: "/tags/:name/"
+    layout: tag
+    tags:

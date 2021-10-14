@@ -10,6 +10,24 @@ layout: default
     <div class="source">
       <a href={{ page.source }}><img height=20px src='../images/source.png'> {{ page.source_type }} </a> 
     </div>
+    <div>
+      <img height=20px src='../images/tags.png'>
+      <tr>
+        {% for tag in page.tags %}
+          {% for tag_type in site.tags %}
+            {% if tag == tag_type.name %}
+              <td>
+                <a href="../tags/{{ tag }}">
+                  <span style="color:  {{ tag_type.color }}; background-color: {{ tag_type.bcolor }}; display: inline-block; border-radius: 5px;">
+                    {{ tag }}
+                  </span>
+                </a>
+              </td>
+            {% endif %}
+          {% endfor %}  
+        {% endfor %}
+        </tr>
+    </div>
 
     <div class="entry">
       {{ content }}
