@@ -3,7 +3,7 @@ layout: default
 ---
 
 <div class="blog-grid-container">
-  {% assign lowerPageTitle = page.title | downcase %}
+  {% assign lowerPageTitle = page.title | downcase | replace: ' ', '-'%}
   {% for post in site.posts %}
     {% for tag in post.tags %}
         {% if tag == lowerPageTitle %}   
